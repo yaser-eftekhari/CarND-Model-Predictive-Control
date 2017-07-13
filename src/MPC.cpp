@@ -111,9 +111,11 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
+      // evaluation of the fitted polynomial at x0
       AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0, 2) + coeffs[3] * CppAD::pow(x0, 3);
-      // TODO: Change this evaluation
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+      // evaluation of the derivative of the fitted polynomial at x0
+      AD<double> fp0 = coeffs[1] + 2 * coeffs[2] * x0 + 3 * coeffs[3] * CppAD::pow(x0, 2);
+      AD<double> psides0 = CppAD::atan(fp0);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.

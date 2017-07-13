@@ -41,6 +41,15 @@ double polyeval(Eigen::VectorXd coeffs, double x) {
   return result;
 }
 
+// Evaluate derivative of the polynomial.
+double derpolyeval(Eigen::VectorXd coeffs, double x) {
+  double result = 0.0;
+  for (int i = 1; i < coeffs.size(); i++) {
+    result += i * coeffs[i] * pow(x, i - 1);
+  }
+  return result;
+}
+
 // Fit a polynomial.
 // Adapted from
 // https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
@@ -100,8 +109,7 @@ int main() {
           double cte = polyeval(coeffs, px) - py;
           // Due to the sign starting at 0, the orientation error is -f'(x).
           // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
-          // TODO: Check what should go here
-          double epsi = psi - atan(coeffs[1]);
+          double epsi = psi - atan(derpolyeval(coeffs, px));
 
           Eigen::VectorXd state(6);
           state << px, py, psi, v, cte, epsi;
