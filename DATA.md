@@ -15,7 +15,6 @@ since y is the up-down direction.
 * `throttle` (float) - The current throttle value [-1, 1].
 * `speed` (float) - The current velocity in **mph**.
 
-
 ### `psi` and `psi_unity` representations
 
 `psi`
@@ -27,7 +26,6 @@ since y is the up-down direction.
 //
 //            270
 ```
-
 
 `psi_unity`
 

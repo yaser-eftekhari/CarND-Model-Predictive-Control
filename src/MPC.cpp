@@ -25,7 +25,7 @@ size_t epsi_start = cte_start + N;
 size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
-double ref_v = 40;
+double ref_v = 20;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -68,7 +68,8 @@ class FG_eval {
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; t++) {
-      fg[0] += 500 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      // fg[0] += 500 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += 1000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
@@ -186,41 +187,41 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // set the range of values for x to
   // // Set all non-actuators upper and lowerlimits
   // // to the max negative and positive values.
-  // for (int i = 0; i < delta_start; i++) {
-  //   vars_lowerbound[i] = -1.0e19;
-  //   vars_upperbound[i] = 1.0e19;
+  for (int i = 0; i < delta_start; i++) {
+    vars_lowerbound[i] = -1.0e19;
+    vars_upperbound[i] = 1.0e19;
+  }
+  // for (int i = x_start; i < y_start; i++) {
+  //   vars_lowerbound[i] = x - 10;
+  //   vars_upperbound[i] = x + 10;
   // }
-  for (int i = x_start; i < y_start; i++) {
-    vars_lowerbound[i] = x - 10;
-    vars_upperbound[i] = x + 10;
-  }
-  // TODO: Find the appropriate range for y
-  // set the range of values for y to
-  for (int i = y_start; i < psi_start; i++) {
-    vars_lowerbound[i] = y - 10;
-    vars_upperbound[i] = y + 10;
-  }
-  // set the range of values for psi to [0, 2pi]
-  for (int i = psi_start; i < v_start; i++) {
-    vars_lowerbound[i] = 0;
-    vars_upperbound[i] = 2*M_PI;
-  }
-  // set the range of values for v to [0, 50]
-  for (int i = v_start; i < cte_start; i++) {
-    vars_lowerbound[i] = 0;
-    vars_upperbound[i] = 50;
-  }
-  // TODO: See if this range makes sense
-  // set the range of values for cte to [-5, 5]
-  for (int i = cte_start; i < epsi_start; i++) {
-    vars_lowerbound[i] = -5;
-    vars_upperbound[i] = 5;
-  }
-  // set the range of values for psi error to [-10, 10] in radians
-  for (int i = epsi_start; i < delta_start; i++) {
-    vars_lowerbound[i] = -0.174533;
-    vars_upperbound[i] = 0.174533;
-  }
+  // // TODO: Find the appropriate range for y
+  // // set the range of values for y to
+  // for (int i = y_start; i < psi_start; i++) {
+  //   vars_lowerbound[i] = y - 10;
+  //   vars_upperbound[i] = y + 10;
+  // }
+  // // set the range of values for psi to [0, 2pi]
+  // for (int i = psi_start; i < v_start; i++) {
+  //   vars_lowerbound[i] = 0;
+  //   vars_upperbound[i] = 2*M_PI;
+  // }
+  // // set the range of values for v to [0, 50]
+  // for (int i = v_start; i < cte_start; i++) {
+  //   vars_lowerbound[i] = 0;
+  //   vars_upperbound[i] = 50;
+  // }
+  // // TODO: See if this range makes sense
+  // // set the range of values for cte to [-5, 5]
+  // for (int i = cte_start; i < epsi_start; i++) {
+  //   vars_lowerbound[i] = -5;
+  //   vars_upperbound[i] = 5;
+  // }
+  // // set the range of values for psi error to [-10, 10] in radians
+  // for (int i = epsi_start; i < delta_start; i++) {
+  //   vars_lowerbound[i] = -0.174533;
+  //   vars_upperbound[i] = 0.174533;
+  // }
   // set the range of values for delta to [-25, 25] in radians
   for (int i = delta_start; i < a_start; i++) {
     vars_lowerbound[i] = -0.436332;
