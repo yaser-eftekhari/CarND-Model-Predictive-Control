@@ -1,0 +1,41 @@
+I have put comments on the code. So I will refrain from stating them here again.
+
+About the Model:
+I followed the guidelines in the course. The states are:
+- x position
+- y position
+- car orientation (psi)
+- car speed (v)
+- cross-track error (CTE)
+- orientation error (epsi)
+
+The actuators are:
+- steering angle
+- throttle
+
+The update equations are as per the course and are:
+- x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+- y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+- psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+- v_[t+1] = v[t] + a[t] * dt
+- cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+- epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+
+Choosing timestep length and duration:
+This was done through simulator, trial and error really. What I found out was the dt should be about 0.1. Smaller numbers will result in lots of steering commands (left-right wobbling). N was selected such that the product of N*dt = 1.
+
+Choosing the weights on the cost function:
+Although the weights were chosen through simulation, I followed a few rules:
+- The Cross-Track Error (CTE) and orientation error are important so they should have a very hight weight.
+- By having a high weight for velocity error the car will drive aggressively. Although it will not go off track but it will drive like a rally driver. Also it will apply breaks when unnecessary.
+
+Choosing fitted polynomial:
+As per recommendation in the course a polynomial with degree three was chosen to fit the waypoints. This then affected the finding of the desired orientation psides, as can be seen in the code.
+NOTE: the waypoints are converted from map coordinate to car coordinate. Although this is not necessary for CTE calculation, it made the formulation simpler and enabled to return the points to simulator for display purposes.
+
+Prediction:
+In order to compensate for the lag in the actuation, as per the code suggestion a delay of 100 msec was assumed. This meant that the state variables had to be found for t = 0.1 sec. This is done in the 'main.cpp'. The formulation follows exactly like the ones discussed above.
+In order to convert from map coordinate to car coordinate, reference https://en.wikipedia.org/wiki/Rotation_of_axes was used.
+
+Steering angle command:
+This was probably the hardest one to find. If the steering angle is just normalized by 'deg2rad(25)', the turns that the car makes are still too sharp. After some googling, the normalization by Lf was also applied. This made the steering much smoother.

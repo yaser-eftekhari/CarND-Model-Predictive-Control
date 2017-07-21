@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // Set the timestep length and duration
-size_t N = 25;
-double dt = 0.05;
+size_t N = 10;
+double dt = 0.1;
 
 // This is the size of the state array
 size_t S = 6;
@@ -15,7 +15,7 @@ size_t S = 6;
 // This is the size of the actuator Array
 size_t A = 2;
 
-// Here are the start index of variables for each state and actuator control element in the var array
+// Here are the start indeces of variables for each state and actuator control element in the var array
 size_t x_start = 0;
 size_t y_start = x_start + N;
 size_t psi_start = y_start + N;
@@ -25,7 +25,8 @@ size_t epsi_start = cte_start + N;
 size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
-double ref_v = 20;
+// This is the target velocity we want the car to achieve
+double ref_v = 70;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -55,22 +56,19 @@ class FG_eval {
 
     // The part of the cost based on the reference state.
     for (int t = 0; t < N; t++) {
-      // TODO: have appropriate weights here
-      fg[0] += 1000*CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += 1000*CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += 2000*CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 2000*CppAD::pow(vars[epsi_start + t], 2);
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) {
-      // TODO: have appropriate weights here
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t], 2);
     }
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; t++) {
-      // TODO: have appropriate weights here
       fg[0] += 200*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
@@ -78,7 +76,6 @@ class FG_eval {
     //
     // Setup Constraints
     //
-    // NOTE: In this section you'll setup the model constraints.
 
     // Initial constraints
     //
@@ -158,7 +155,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //
   // 4 * 10 + 2 * 9
   size_t n_vars = (S * N) + A * (N - 1);
-  // TODO: Set the number of constraints
+  // Set the number of constraints
   size_t n_constraints = N * S;
 
   double x = state[0];
@@ -197,7 +194,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
     vars_lowerbound[i] = -0.436332;
     vars_upperbound[i] = 0.436332;
   }
-  // set the range of values for a to [-5, 5] in radians
+  // set the range of values for a to [-1, 1]
   for (int i = a_start; i < n_vars; i++) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
@@ -268,7 +265,6 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // creates a 2 element double vector.
 
   // We want to send back the actuator values as well as the predicted trajectory for display purposes
-
   vector<double> output;
 
   output.push_back(solution.x[delta_start]);
