@@ -41,8 +41,8 @@ const double Lf = 2.67;
 
 class FG_eval {
  public:
+   // Coefficients of the fitted polynomial.
   Eigen::VectorXd coeffs;
-  // Coefficients of the fitted polynomial.
   FG_eval(Eigen::VectorXd coeffs) { this->coeffs = coeffs; }
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
@@ -55,21 +55,23 @@ class FG_eval {
 
     // The part of the cost based on the reference state.
     for (int t = 0; t < N; t++) {
-      fg[0] += CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += CppAD::pow(vars[epsi_start + t], 2);
+      // TODO: have appropriate weights here
+      fg[0] += 1000*CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += 1000*CppAD::pow(vars[epsi_start + t], 2);
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
     // Minimize the use of actuators.
     for (int t = 0; t < N - 1; t++) {
+      // TODO: have appropriate weights here
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t], 2);
     }
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < N - 2; t++) {
-      // fg[0] += 500 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += 1000 * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      // TODO: have appropriate weights here
+      fg[0] += 200*CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
@@ -182,46 +184,14 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   Dvector vars_lowerbound(n_vars);
   Dvector vars_upperbound(n_vars);
-  // TODO: Set lower and upper limits for variables.
-  // TODO: Find the appropriate range for x
-  // set the range of values for x to
-  // // Set all non-actuators upper and lowerlimits
-  // // to the max negative and positive values.
+  // Set lower and upper limits for variables.
+  // Set all non-actuators upper and lowerlimits
+  // to the max negative and positive values.
   for (int i = 0; i < delta_start; i++) {
     vars_lowerbound[i] = -1.0e19;
     vars_upperbound[i] = 1.0e19;
   }
-  // for (int i = x_start; i < y_start; i++) {
-  //   vars_lowerbound[i] = x - 10;
-  //   vars_upperbound[i] = x + 10;
-  // }
-  // // TODO: Find the appropriate range for y
-  // // set the range of values for y to
-  // for (int i = y_start; i < psi_start; i++) {
-  //   vars_lowerbound[i] = y - 10;
-  //   vars_upperbound[i] = y + 10;
-  // }
-  // // set the range of values for psi to [0, 2pi]
-  // for (int i = psi_start; i < v_start; i++) {
-  //   vars_lowerbound[i] = 0;
-  //   vars_upperbound[i] = 2*M_PI;
-  // }
-  // // set the range of values for v to [0, 50]
-  // for (int i = v_start; i < cte_start; i++) {
-  //   vars_lowerbound[i] = 0;
-  //   vars_upperbound[i] = 50;
-  // }
-  // // TODO: See if this range makes sense
-  // // set the range of values for cte to [-5, 5]
-  // for (int i = cte_start; i < epsi_start; i++) {
-  //   vars_lowerbound[i] = -5;
-  //   vars_upperbound[i] = 5;
-  // }
-  // // set the range of values for psi error to [-10, 10] in radians
-  // for (int i = epsi_start; i < delta_start; i++) {
-  //   vars_lowerbound[i] = -0.174533;
-  //   vars_upperbound[i] = 0.174533;
-  // }
+
   // set the range of values for delta to [-25, 25] in radians
   for (int i = delta_start; i < a_start; i++) {
     vars_lowerbound[i] = -0.436332;
@@ -291,13 +261,23 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   auto cost = solution.obj_value;
   std::cout << "Cost " << cost << std::endl;
 
-  // TODO: Return the first actuator values. The variables can be accessed with
+  // Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+
+  // We want to send back the actuator values as well as the predicted trajectory for display purposes
+
+  vector<double> output;
+
+  output.push_back(solution.x[delta_start]);
+  output.push_back(solution.x[a_start]);
+
+  for(int i = 1; i < N; i++) {
+    output.push_back(solution.x[x_start + i]);
+    output.push_back(solution.x[y_start + i]);
+  }
+
+  return output;
 }
